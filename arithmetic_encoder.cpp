@@ -47,9 +47,12 @@ dl encode(const std::string str) {
       ++(*symbols[str[i]]).frequency;
     }
   }
+  char partition_scheme[symbols.size()];
   dl last = 0;
+  size_t i = 0;
   for(std::map<char, symbol*>::iterator it = symbols.begin();
       it != symbols.end(); ++it) {
+    partition_scheme[i] = (*it).first;
     (*it).second -> probability =
       static_cast<dl>((*it).second -> frequency)/static_cast<dl>(str.size());
     (*it).second -> start = last;
@@ -57,7 +60,15 @@ dl encode(const std::string str) {
     last = (*it).second -> end;
     (*(*it).second)();
   }
-  
+  dl high = 1.0, low = 0.0, range;
+  for(register size_t i = 0; i < str.size(); ++i) {
+    size_t sym_i;
+    for(sym_i = 0; partition_scheme[sym_i] != str[i]; ++sym_i);
+    range = high - low;
+    high = low + range * (symbols[str[i]] -> end);
+    low = low + range * (symbols[str[i]] -> start);
+  }
+  clean_map<char, symbol>(symbols);
   /*
   dl high = 1.0, low = 0.0;
   dl range;
@@ -68,12 +79,13 @@ dl encode(const std::string str) {
     }*/
   
   
-  return 0.0;
+  return (high + low)/2;
 }
 
 int main(void) {
-  std::string my_str = "AAABBC";
-  encode(my_str);
+  std::string my_str = "ARBER";
+  dl d = encode(my_str);
+  std::cout << "encoded string: " << d << std::endl;
   return 0;
 }
 
